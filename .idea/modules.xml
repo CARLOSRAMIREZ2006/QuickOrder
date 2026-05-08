@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/QuickOrder.iml" filepath="$PROJECT_DIR$/.idea/QuickOrder.iml" />
+      <module fileurl="file://$PROJECT_DIR$/QuickOrder/QuickOrder.iml" filepath="$PROJECT_DIR$/QuickOrder/QuickOrder.iml" />
     </modules>
   </component>
 </project>
