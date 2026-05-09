@@ -86,4 +86,11 @@ public class PedidoService {
             throw new RuntimeException("No se puede crear el pedido: El cliente especificado no existe.");
         }
     }
+    @Transactional
+    public void actualizarEstadoPedido(Long id, String nuevoEstado) {
+        log.info("Actualizando estado del pedido ID: {} a {}", id, nuevoEstado);
+        Pedido pedido = obtenerPorId(id);
+        pedido.setEstado(nuevoEstado);
+        pedidoRepository.save(pedido);
+    }
 }

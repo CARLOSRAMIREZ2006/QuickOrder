@@ -51,4 +51,13 @@ public class PedidoController {
         Pedido pedidoConfirmado = pedidoService.confirmarPedidoYDescontarStock(id, productoId, cantidad);
         return ResponseEntity.ok(pedidoConfirmado);
     }
+    @PutMapping("/{id}/estado")
+    public ResponseEntity<Void> actualizarEstado(
+            @PathVariable Long id,
+            @RequestParam String nuevoEstado) {
+
+        log.info("Petición REST para cambiar estado del pedido ID: {} a {}", id, nuevoEstado);
+        pedidoService.actualizarEstadoPedido(id, nuevoEstado);
+        return ResponseEntity.ok().build();
+    }
 }
