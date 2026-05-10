@@ -34,28 +34,27 @@ public class PedidoService {
 
     @Transactional
     public Pedido crearPedido(Pedido pedido) {
-        BigDecimal sumaTotal = BigDecimal.ZERO;
-
-        if (pedido.getDetalles() != null) {
-            for (DetallePedido detalle : pedido.getDetalles()) {
-                BigDecimal cantidad = new BigDecimal(detalle.getCantidad());
-                BigDecimal subtotal = detalle.getPrecioUnitario().multiply(cantidad);
-                sumaTotal = sumaTotal.add(subtotal);
-            }
-        }
-        pedido.setTotal(sumaTotal);
-
         List<DetallePedido> detallesTemporales = pedido.getDetalles();
         pedido.setDetalles(null);
+        pedido.setTotal(BigDecimal.ZERO);
 
         Pedido pedidoGuardado = pedidoRepository.save(pedido);
 
         if (detallesTemporales != null) {
+            BigDecimal sumaTotal = BigDecimal.ZERO;
+
             for (DetallePedido det : detallesTemporales) {
                 det.setPedidoId(pedidoGuardado.getId());
+
+                BigDecimal cantidad = new BigDecimal(det.getCantidad());
+                BigDecimal subtotal = det.getPrecioUnitario().multiply(cantidad);
+                sumaTotal = sumaTotal.add(subtotal);
             }
+
             pedidoGuardado.setDetalles(detallesTemporales);
-            pedidoGuardado = pedidoRepository.save(pedidoGuardado);
+            pedidoGuardado.setTotal(sumaTotal);
+
+            return pedidoRepository.save(pedidoGuardado);
         }
 
         return pedidoGuardado;

@@ -1,4 +1,3 @@
-
 package com.QuickOrder.detallepedido.model;
 
 import jakarta.persistence.*;
