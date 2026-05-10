@@ -1,14 +1,18 @@
 package com.QuickOrder.despacho.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "despachos")
 public class Despacho {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -33,28 +37,11 @@ public class Despacho {
     @PrePersist
     public void prePersist() {
         this.fechaActualizacion = LocalDateTime.now();
-        if (this.estado == null) {
-            this.estado = "PREPARANDO";
-        }
+        if (this.estado == null) this.estado = "PREPARANDO";
     }
 
     @PreUpdate
     public void preUpdate() {
         this.fechaActualizacion = LocalDateTime.now();
     }
-
-    public Despacho() {}
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public Long getPedidoId() { return pedidoId; }
-    public void setPedidoId(Long pedidoId) { this.pedidoId = pedidoId; }
-    public String getDireccionEntrega() { return direccionEntrega; }
-    public void setDireccionEntrega(String direccionEntrega) { this.direccionEntrega = direccionEntrega; }
-    public String getNumeroSeguimiento() { return numeroSeguimiento; }
-    public void setNumeroSeguimiento(String numeroSeguimiento) { this.numeroSeguimiento = numeroSeguimiento; }
-    public String getEstado() { return estado; }
-    public void setEstado(String estado) { this.estado = estado; }
-    public LocalDateTime getFechaActualizacion() { return fechaActualizacion; }
-    public void setFechaActualizacion(LocalDateTime fechaActualizacion) { this.fechaActualizacion = fechaActualizacion; }
 }

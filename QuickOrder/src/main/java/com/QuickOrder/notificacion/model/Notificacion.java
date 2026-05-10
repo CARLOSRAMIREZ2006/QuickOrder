@@ -1,14 +1,18 @@
 package com.QuickOrder.notificacion.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "notificaciones")
 public class Notificacion {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -34,24 +38,6 @@ public class Notificacion {
     @PrePersist
     public void prePersist() {
         this.fechaEnvio = LocalDateTime.now();
-        if (this.estado == null) {
-            this.estado = "ENVIADO";
-        }
+        if (this.estado == null) this.estado = "ENVIADO";
     }
-
-    public Notificacion() {}
-
-    // Getters y Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public Long getPedidoId() { return pedidoId; }
-    public void setPedidoId(Long pedidoId) { this.pedidoId = pedidoId; }
-    public String getCorreoDestino() { return correoDestino; }
-    public void setCorreoDestino(String correoDestino) { this.correoDestino = correoDestino; }
-    public String getMensaje() { return mensaje; }
-    public void setMensaje(String mensaje) { this.mensaje = mensaje; }
-    public LocalDateTime getFechaEnvio() { return fechaEnvio; }
-    public void setFechaEnvio(LocalDateTime fechaEnvio) { this.fechaEnvio = fechaEnvio; }
-    public String getEstado() { return estado; }
-    public void setEstado(String estado) { this.estado = estado; }
 }
