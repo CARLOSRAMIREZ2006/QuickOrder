@@ -7,10 +7,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class PedidoService {
@@ -41,56 +41,30 @@ public class PedidoService {
 
     @Transactional
     public Pedido crearPedido(Pedido pedido) {
-        log.info("Iniciando creación de pedido para el cliente ID: {}", pedido.getClienteId());
-
-        verificarClienteExiste(pedido.getClienteId());
-
-        pedido.setEstado("PENDIENTE");
-        Pedido nuevoPedido = pedidoRepository.save(pedido);
-
-        log.info("Pedido PENDIENTE creado con ID: {}", nuevoPedido.getId());
-        return nuevoPedido;
-    }
-
-    @Transactional
-    public Pedido confirmarPedidoYDescontarStock(Long pedidoId, Long productoId, Integer cantidad) {
-        log.info("Confirmando pedido ID: {}", pedidoId);
-        Pedido pedido = obtenerPorId(pedidoId);
-
-        if (!pedido.getEstado().equals("PENDIENTE")) {
-            throw new RuntimeException("Solo se pueden confirmar pedidos en estado PENDIENTE");
-        }
+        log.info("Validando si el cliente ID {} existe...", pedido.getClienteId());
 
         try {
-            String url = INVENTARIO_API_URL + "producto/" + productoId + "/descontar?cantidad=" + cantidad;
-            restTemplate.put(url, null); // PUT para descontar stock
-            log.info("Stock descontado exitosamente en el microservicio de Inventario");
-        } catch (HttpClientErrorException e) {
-            log.error("Error al descontar stock. Es posible que no haya stock suficiente.");
-            throw new RuntimeException("No se pudo confirmar el pedido: Stock insuficiente o producto no encontrado.");
+            ResponseEntity<Map> response = restTemplate.getForEntity(CLIENTES_API_URL + pedido.getClienteId(), Map.class);
+            if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+                throw new RuntimeException("El cliente no existe en el sistema.");
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Error de validación: El cliente ID " + pedido.getClienteId() + " no existe.");
         }
 
-        pedido.setEstado("CONFIRMADO");
+        log.info("Cliente validado. Guardando pedido...");
         return pedidoRepository.save(pedido);
     }
 
-    private void verificarClienteExiste(Long clienteId) {
-        try {
-            ResponseEntity<String> response = restTemplate.getForEntity(CLIENTES_API_URL + clienteId, String.class);
-            if (!response.getStatusCode().is2xxSuccessful()) {
-                throw new RuntimeException("Cliente no encontrado en el sistema");
-            }
-            log.info("Validación exitosa: El cliente ID {} existe", clienteId);
-        } catch (HttpClientErrorException e) {
-            log.error("Fallo la validación: Cliente ID {} no existe en el microservicio Clientes", clienteId);
-            throw new RuntimeException("No se puede crear el pedido: El cliente especificado no existe.");
-        }
-    }
     @Transactional
-    public void actualizarEstadoPedido(Long id, String nuevoEstado) {
-        log.info("Actualizando estado del pedido ID: {} a {}", id, nuevoEstado);
+    public Pedido actualizarEstado(Long id, String nuevoEstado) {
         Pedido pedido = obtenerPorId(id);
         pedido.setEstado(nuevoEstado);
-        pedidoRepository.save(pedido);
+        return pedidoRepository.save(pedido);
+    }
+
+    @Transactional
+    public void eliminarPedido(Long id) {
+        pedidoRepository.deleteById(id);
     }
 }
