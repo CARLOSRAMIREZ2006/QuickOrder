@@ -29,7 +29,6 @@ public class PedidoService {
 
     @Transactional(readOnly = true)
     public List<Pedido> obtenerTodos() {
-        log.info("Consultando todos los pedidos");
         return pedidoRepository.findAll();
     }
 
@@ -41,8 +40,6 @@ public class PedidoService {
 
     @Transactional
     public Pedido crearPedido(Pedido pedido) {
-        log.info("Validando si el cliente ID {} existe...", pedido.getClienteId());
-
         try {
             ResponseEntity<Map> response = restTemplate.getForEntity(CLIENTES_API_URL + pedido.getClienteId(), Map.class);
             if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
@@ -51,8 +48,6 @@ public class PedidoService {
         } catch (Exception e) {
             throw new RuntimeException("Error de validación: El cliente ID " + pedido.getClienteId() + " no existe.");
         }
-
-        log.info("Cliente validado. Guardando pedido...");
         return pedidoRepository.save(pedido);
     }
 
@@ -60,6 +55,26 @@ public class PedidoService {
     public Pedido actualizarEstado(Long id, String nuevoEstado) {
         Pedido pedido = obtenerPorId(id);
         pedido.setEstado(nuevoEstado);
+        return pedidoRepository.save(pedido);
+    }
+
+    @Transactional
+    public void actualizarEstadoPedido(Long id, String nuevoEstado) {
+        Pedido pedido = obtenerPorId(id);
+        pedido.setEstado(nuevoEstado);
+        pedidoRepository.save(pedido);
+    }
+
+    @Transactional
+    public Pedido confirmarPedidoYDescontarStock(Long id, Long productoId, Integer cantidad) {
+        Pedido pedido = obtenerPorId(id);
+        try {
+            String url = INVENTARIO_API_URL + productoId + "/descontar?cantidad=" + cantidad;
+            restTemplate.put(url, null);
+        } catch (Exception e) {
+            throw new RuntimeException("Error al descontar stock para el producto ID: " + productoId);
+        }
+        pedido.setEstado("CONFIRMADO");
         return pedidoRepository.save(pedido);
     }
 
