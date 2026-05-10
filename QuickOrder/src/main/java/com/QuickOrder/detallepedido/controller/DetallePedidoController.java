@@ -33,10 +33,4 @@ public class DetallePedidoController {
     public ResponseEntity<DetallePedido> crear(@Valid @RequestBody DetallePedido detallePedido) {
         return new ResponseEntity<>(detallePedidoService.agregarDetalle(detallePedido), HttpStatus.CREATED);
     }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-        detallePedidoService.eliminarDetalle(id);
-        return ResponseEntity.noContent().build();
-    }
 }
