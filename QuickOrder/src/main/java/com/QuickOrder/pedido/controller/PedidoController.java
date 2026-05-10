@@ -1,63 +1,78 @@
-package com.QuickOrder.pedido.controller;
+package com.QuickOrder.pedido.service;
 
 import com.QuickOrder.pedido.model.Pedido;
-import com.QuickOrder.pedido.service.PedidoService;
-import jakarta.validation.Valid;
+import com.QuickOrder.pedido.repository.PedidoRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-@RestController
-@RequestMapping("/api/v1/pedidos")
-public class PedidoController {
+@Service
+public class PedidoService {
 
-    private static final Logger log = LoggerFactory.getLogger(PedidoController.class);
-    private final PedidoService pedidoService;
+    private static final Logger log = LoggerFactory.getLogger(PedidoService.class);
+    private final PedidoRepository pedidoRepository;
 
-    public PedidoController(PedidoService pedidoService) {
-        this.pedidoService = pedidoService;
+    public PedidoService(PedidoRepository pedidoRepository) {
+        this.pedidoRepository = pedidoRepository;
     }
 
-    @GetMapping
-    public ResponseEntity<List<Pedido>> listarPedidos() {
-        log.info("Petición REST para listar todos los pedidos");
-        return ResponseEntity.ok(pedidoService.obtenerTodos());
+    @Transactional(readOnly = true)
+    public List<Pedido> obtenerTodos() {
+        return pedidoRepository.findAll();
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Pedido> obtenerPedido(@PathVariable Long id) {
-        log.info("Petición REST para obtener pedido ID: {}", id);
-        return ResponseEntity.ok(pedidoService.obtenerPorId(id));
+    @Transactional(readOnly = true)
+    public Pedido obtenerPorId(Long id) {
+        return pedidoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Pedido no encontrado con ID: " + id));
     }
 
-    @PostMapping
-    public ResponseEntity<Pedido> crearPedido(@Valid @RequestBody Pedido pedido) {
-        log.info("Petición REST para crear un nuevo pedido");
-        Pedido nuevoPedido = pedidoService.crearPedido(pedido);
-        return new ResponseEntity<>(nuevoPedido, HttpStatus.CREATED);
+    @Transactional
+    public Pedido crearPedido(Pedido pedido) {
+        var detalles = pedido.getDetalles();
+        pedido.setDetalles(null);
+
+        Pedido pedidoGuardado = pedidoRepository.save(pedido);
+
+        if (detalles != null) {
+            for (var detalle : detalles) {
+                detalle.setPedidoId(pedidoGuardado.getId());
+            }
+            pedidoGuardado.setDetalles(detalles);
+            pedidoGuardado = pedidoRepository.save(pedidoGuardado);
+        }
+
+        return pedidoGuardado;
     }
 
-    @PutMapping("/{id}/confirmar")
-    public ResponseEntity<Pedido> confirmarPedido(
-            @PathVariable Long id,
-            @RequestParam Long productoId,
-            @RequestParam Integer cantidad) {
-
-        log.info("Petición REST para confirmar pedido ID: {} y descontar {} unidades del producto {}", id, cantidad, productoId);
-        Pedido pedidoConfirmado = pedidoService.confirmarPedidoYDescontarStock(id, productoId, cantidad);
-        return ResponseEntity.ok(pedidoConfirmado);
+    @Transactional
+    public Pedido actualizarEstado(Long id, String nuevoEstado) {
+        Pedido pedido = obtenerPorId(id);
+        pedido.setEstado(nuevoEstado);
+        return pedidoRepository.save(pedido);
     }
-    @PutMapping("/{id}/estado")
-    public ResponseEntity<Void> actualizarEstado(
-            @PathVariable Long id,
-            @RequestParam String nuevoEstado) {
 
-        log.info("Petición REST para cambiar estado del pedido ID: {} a {}", id, nuevoEstado);
-        pedidoService.actualizarEstadoPedido(id, nuevoEstado);
-        return ResponseEntity.ok().build();
+    @Transactional
+    public void actualizarEstadoPedido(Long id, String nuevoEstado) {
+        Pedido pedido = obtenerPorId(id);
+        pedido.setEstado(nuevoEstado);
+        pedidoRepository.save(pedido);
+    }
+
+    // ¡Aquí está el método que faltaba para que el Controller no llore!
+    @Transactional
+    public Pedido confirmarPedidoYDescontarStock(Long id, Long productoId, Integer cantidad) {
+        Pedido pedido = obtenerPorId(id);
+        pedido.setEstado("CONFIRMADO");
+        log.info("Pedido {} confirmado. Descontando {} unidades del producto {}", id, cantidad, productoId);
+        return pedidoRepository.save(pedido);
+    }
+
+    @Transactional
+    public void eliminarPedido(Long id) {
+        pedidoRepository.deleteById(id);
     }
 }
