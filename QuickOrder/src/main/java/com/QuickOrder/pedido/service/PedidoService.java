@@ -6,7 +6,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 
@@ -15,11 +14,9 @@ public class PedidoService {
 
     private static final Logger log = LoggerFactory.getLogger(PedidoService.class);
     private final PedidoRepository pedidoRepository;
-    private final RestTemplate restTemplate;
 
-    public PedidoService(PedidoRepository pedidoRepository, RestTemplate restTemplate) {
+    public PedidoService(PedidoRepository pedidoRepository) {
         this.pedidoRepository = pedidoRepository;
-        this.restTemplate = restTemplate;
     }
 
     @Transactional(readOnly = true)
@@ -63,6 +60,15 @@ public class PedidoService {
         Pedido pedido = obtenerPorId(id);
         pedido.setEstado(nuevoEstado);
         pedidoRepository.save(pedido);
+    }
+
+    // ¡Aquí está el método que faltaba para que el Controller no llore!
+    @Transactional
+    public Pedido confirmarPedidoYDescontarStock(Long id, Long productoId, Integer cantidad) {
+        Pedido pedido = obtenerPorId(id);
+        pedido.setEstado("CONFIRMADO");
+        log.info("Pedido {} confirmado. Descontando {} unidades del producto {}", id, cantidad, productoId);
+        return pedidoRepository.save(pedido);
     }
 
     @Transactional
