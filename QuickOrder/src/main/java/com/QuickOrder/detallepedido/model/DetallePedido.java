@@ -13,7 +13,7 @@ public class DetallePedido {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "pedido_id")
+    @Column(name = "pedido_id") // Falta esta relación con la tabla pedidos
     private Long pedidoId;
 
     @Column(name = "producto_id")

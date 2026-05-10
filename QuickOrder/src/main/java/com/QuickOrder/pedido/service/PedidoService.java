@@ -3,11 +3,14 @@ package com.QuickOrder.pedido.service;
 import com.QuickOrder.detallepedido.model.DetallePedido;
 import com.QuickOrder.pedido.model.Pedido;
 import com.QuickOrder.pedido.repository.PedidoRepository;
+import com.QuickOrder.producto.model.Producto;
+import com.QuickOrder.producto.repository.ProductoRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import java.time.LocalDateTime;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -16,9 +19,11 @@ public class PedidoService {
 
     private static final Logger log = LoggerFactory.getLogger(PedidoService.class);
     private final PedidoRepository pedidoRepository;
+    private final ProductoRepository productoRepository;
 
-    public PedidoService(PedidoRepository pedidoRepository) {
+    public PedidoService(PedidoRepository pedidoRepository, ProductoRepository productoRepository) {
         this.pedidoRepository = pedidoRepository;
+        this.productoRepository = productoRepository;
     }
 
     @Transactional(readOnly = true)
@@ -34,37 +39,30 @@ public class PedidoService {
 
     @Transactional
     public Pedido crearPedido(Pedido pedido) {
-        List<DetallePedido> detallesTemporales = pedido.getDetalles();
+        pedido.setFechaCreacion(LocalDateTime.now());
 
-        BigDecimal sumaTotal = BigDecimal.ZERO;
-        if (detallesTemporales != null) {
-            for (DetallePedido det : detallesTemporales) {
-                BigDecimal cantidad = new BigDecimal(det.getCantidad());
-                BigDecimal subtotal = det.getPrecioUnitario().multiply(cantidad);
-                sumaTotal = sumaTotal.add(subtotal);
+        if (pedido.getEstado() == null) {
+            pedido.setEstado("PENDIENTE");
+        }
+
+        BigDecimal totalAcumulado = BigDecimal.ZERO;
+
+        if (pedido.getDetalles() != null) {
+            for (DetallePedido detalle : pedido.getDetalles()) {
+                Producto producto = productoRepository.findById(detalle.getProductoId())
+                        .orElseThrow(() -> new RuntimeException("Producto no encontrado ID: " + detalle.getProductoId()));
+
+                BigDecimal precioUnitario = producto.getPrecio();
+                BigDecimal subtotal = precioUnitario.multiply(new BigDecimal(detalle.getCantidad()));
+
+                detalle.setPrecioUnitario(precioUnitario);
+                detalle.setSubtotal(subtotal);
+
+                totalAcumulado = totalAcumulado.add(subtotal);
             }
         }
 
-        pedido.setPrecioTotal(sumaTotal);
-        pedido.setDetalles(null);
-
-        Pedido pedidoGuardado = pedidoRepository.save(pedido);
-
-        if (detallesTemporales != null) {
-            for (DetallePedido det : detallesTemporales) {
-                det.setPedidoId(pedidoGuardado.getId());
-            }
-            pedidoGuardado.setDetalles(detallesTemporales);
-            return pedidoRepository.save(pedidoGuardado);
-        }
-
-        return pedidoGuardado;
-    }
-
-    @Transactional
-    public Pedido actualizarEstado(Long id, String nuevoEstado) {
-        Pedido pedido = obtenerPorId(id);
-        pedido.setEstado(nuevoEstado);
+        pedido.setPrecioTotal(totalAcumulado);
         return pedidoRepository.save(pedido);
     }
 
@@ -79,7 +77,7 @@ public class PedidoService {
     public Pedido confirmarPedidoYDescontarStock(Long id, Long productoId, Integer cantidad) {
         Pedido pedido = obtenerPorId(id);
         pedido.setEstado("CONFIRMADO");
-        log.info("Pedido {} confirmado. Descontando {} unidades del producto {}", id, cantidad, productoId);
+        log.info("Pedido {} confirmado", id);
         return pedidoRepository.save(pedido);
     }
 

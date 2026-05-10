@@ -35,24 +35,4 @@ public class Pedido {
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "pedido_id")
     private List<DetallePedido> detalles;
-
-    @PrePersist
-    public void prePersist() {
-        this.fechaCreacion = LocalDateTime.now();
-        if (this.estado == null) {
-            this.estado = "PENDIENTE";
-        }
-
-        if (this.detalles != null && !this.detalles.isEmpty()) {
-            BigDecimal totalAcumulado = BigDecimal.ZERO;
-            for (DetallePedido det : this.detalles) {
-                if (det.getPrecioUnitario() != null && det.getCantidad() != null) {
-                    BigDecimal sub = det.getPrecioUnitario().multiply(new BigDecimal(det.getCantidad()));
-                    det.setSubtotal(sub);
-                    totalAcumulado = totalAcumulado.add(sub);
-                }
-            }
-            this.precioTotal = totalAcumulado;
-        }
-    }
 }

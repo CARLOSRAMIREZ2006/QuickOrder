@@ -6,7 +6,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 
 @Service
@@ -32,7 +31,8 @@ public class DetallePedidoService {
 
     @Transactional
     public DetallePedido agregarDetalle(DetallePedido detalle) {
-        log.info("Guardando detalle para pedido {}", detalle.getPedidoId());
+        // Corregido: getPedidoId() con I mayúscula, no L minúscula
+        log.info("Guardando detalle para pedido ID: {}", detalle.getPedidoId());
         return detallePedidoRepository.save(detalle);
     }
 
