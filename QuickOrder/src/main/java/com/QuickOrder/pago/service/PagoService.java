@@ -33,6 +33,21 @@ public class PagoService {
     public Pago procesarPago(Pago pago) {
         log.info("Procesando pago para el pedido ID: {}", pago.getPedidoId());
 
+        try {
+            java.util.Map pedidoData = restTemplate.getForObject(PEDIDOS_API_URL + pago.getPedidoId(), java.util.Map.class);
+            if (pedidoData != null && pedidoData.get("total") != null) {
+                java.math.BigDecimal totalPedido = new java.math.BigDecimal(pedidoData.get("total").toString());
+
+                if (pago.getMonto().compareTo(totalPedido) < 0) {
+                    throw new RuntimeException("El monto del pago (" + pago.getMonto() + ") no puede ser inferior al total del pedido (" + totalPedido + ")");
+                }
+            }
+        } catch (RuntimeException re) {
+            throw re;
+        } catch (Exception e) {
+            throw new RuntimeException("No se pudo validar el total del pedido. Verifique si el pedido ID existe.");
+        }
+
         Pago pagoGuardado = pagoRepository.save(pago);
 
         try {
@@ -45,5 +60,4 @@ public class PagoService {
 
         return pagoGuardado;
     }
-
 }
