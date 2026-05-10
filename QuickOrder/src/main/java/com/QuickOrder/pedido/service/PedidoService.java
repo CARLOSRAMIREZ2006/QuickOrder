@@ -45,7 +45,7 @@ public class PedidoService {
             }
         }
 
-        pedido.setTotal(sumaTotal);
+        pedido.setPrecioTotal(sumaTotal);
         pedido.setDetalles(null);
 
         Pedido pedidoGuardado = pedidoRepository.save(pedido);
