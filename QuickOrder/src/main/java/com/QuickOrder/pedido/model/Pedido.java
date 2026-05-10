@@ -4,10 +4,12 @@ import com.QuickOrder.detallepedido.model.DetallePedido;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
+import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Data
 @Entity
 @Table(name = "pedidos")
 public class Pedido {
@@ -21,8 +23,8 @@ public class Pedido {
     private Long clienteId;
 
     @PositiveOrZero(message = "El total no puede ser negativo")
-    @Column(nullable = false)
-    private BigDecimal total = BigDecimal.ZERO;
+    @Column(name = "precio_total", nullable = false)
+    private BigDecimal precioTotal = BigDecimal.ZERO;
 
     @Column(name = "fecha_creacion", nullable = false)
     private LocalDateTime fechaCreacion;
@@ -42,27 +44,15 @@ public class Pedido {
         }
 
         if (this.detalles != null && !this.detalles.isEmpty()) {
-            BigDecimal suma = BigDecimal.ZERO;
+            BigDecimal totalAcumulado = BigDecimal.ZERO;
             for (DetallePedido det : this.detalles) {
                 if (det.getPrecioUnitario() != null && det.getCantidad() != null) {
                     BigDecimal sub = det.getPrecioUnitario().multiply(new BigDecimal(det.getCantidad()));
-                    suma = suma.add(sub);
+                    det.setSubtotal(sub);
+                    totalAcumulado = totalAcumulado.add(sub);
                 }
             }
-            this.total = suma;
+            this.precioTotal = totalAcumulado;
         }
     }
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public Long getClienteId() { return clienteId; }
-    public void setClienteId(Long clienteId) { this.clienteId = clienteId; }
-    public BigDecimal getTotal() { return total; }
-    public void setTotal(BigDecimal total) { this.total = total; }
-    public LocalDateTime getFechaCreacion() { return fechaCreacion; }
-    public void setFechaCreacion(LocalDateTime fechaCreacion) { this.fechaCreacion = fechaCreacion; }
-    public String getEstado() { return estado; }
-    public void setEstado(String estado) { this.estado = estado; }
-    public List<DetallePedido> getDetalles() { return detalles; }
-    public void setDetalles(List<DetallePedido> detalles) { this.detalles = detalles; }
 }
