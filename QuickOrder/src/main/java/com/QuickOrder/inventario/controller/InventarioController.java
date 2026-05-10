@@ -19,12 +19,12 @@ public class InventarioController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Inventario>> listar() {
+    public ResponseEntity<List<Inventario>> listarTodo() {
         return ResponseEntity.ok(inventarioService.obtenerTodos());
     }
 
     @PostMapping
-    public ResponseEntity<Inventario> crear(@Valid @RequestBody Inventario inventario) {
+    public ResponseEntity<Inventario> crearInventario(@Valid @RequestBody Inventario inventario) {
         Inventario nuevo = inventarioService.guardar(inventario);
         return new ResponseEntity<>(nuevo, HttpStatus.CREATED);
     }
