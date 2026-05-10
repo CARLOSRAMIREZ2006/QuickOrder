@@ -31,7 +31,6 @@ public class DetallePedido {
     @Column(nullable = false)
     private BigDecimal subtotal;
 
-    // Getters y Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public Long getProductoId() { return productoId; }

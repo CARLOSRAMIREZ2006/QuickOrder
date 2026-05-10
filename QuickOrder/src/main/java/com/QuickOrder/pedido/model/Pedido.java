@@ -1,6 +1,6 @@
 package com.QuickOrder.pedido.model;
 
-import com.QuickOrder.detallepedido.model.DetallePedido; // Importamos la otra carpeta
+import com.QuickOrder.detallepedido.model.DetallePedido;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -42,7 +42,6 @@ public class Pedido {
         }
     }
 
-    // Getters y Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public Long getClienteId() { return clienteId; }
