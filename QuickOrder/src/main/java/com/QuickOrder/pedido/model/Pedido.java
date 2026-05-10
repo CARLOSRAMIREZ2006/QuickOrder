@@ -40,6 +40,17 @@ public class Pedido {
         if (this.estado == null) {
             this.estado = "PENDIENTE";
         }
+
+        if (this.detalles != null && !this.detalles.isEmpty()) {
+            BigDecimal suma = BigDecimal.ZERO;
+            for (DetallePedido det : this.detalles) {
+                if (det.getPrecioUnitario() != null && det.getCantidad() != null) {
+                    BigDecimal sub = det.getPrecioUnitario().multiply(new BigDecimal(det.getCantidad()));
+                    suma = suma.add(sub);
+                }
+            }
+            this.total = suma;
+        }
     }
 
     public Long getId() { return id; }
