@@ -40,15 +40,7 @@ public class PedidoService {
 
     @Transactional
     public Pedido crearPedido(Pedido pedido) {
-        try {
-            ResponseEntity<Map> response = restTemplate.getForEntity(CLIENTES_API_URL + pedido.getClienteId(), Map.class);
-            if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
-                throw new RuntimeException("El cliente no existe en el sistema.");
-            }
-        } catch (Exception e) {
-            log.error("Fallo de conexión o cliente inexistente. Causa real: {}", e.getMessage());
-            throw new RuntimeException("Error de validación: El cliente ID " + pedido.getClienteId() + " no existe o el API de clientes no responde.");
-        }
+        log.info("Guardando pedido directo para el cliente ID: {}", pedido.getClienteId());
         return pedidoRepository.save(pedido);
     }
 
