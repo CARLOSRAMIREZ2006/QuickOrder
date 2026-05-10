@@ -1,5 +1,6 @@
 package com.QuickOrder.pedido.service;
 
+import com.QuickOrder.detallepedido.model.DetallePedido;
 import com.QuickOrder.pedido.model.Pedido;
 import com.QuickOrder.pedido.repository.PedidoRepository;
 import org.slf4j.Logger;
@@ -7,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -32,16 +34,27 @@ public class PedidoService {
 
     @Transactional
     public Pedido crearPedido(Pedido pedido) {
-        var detalles = pedido.getDetalles();
+        BigDecimal sumaTotal = BigDecimal.ZERO;
+
+        if (pedido.getDetalles() != null) {
+            for (DetallePedido detalle : pedido.getDetalles()) {
+                BigDecimal cantidad = new BigDecimal(detalle.getCantidad());
+                BigDecimal subtotal = detalle.getPrecioUnitario().multiply(cantidad);
+                sumaTotal = sumaTotal.add(subtotal);
+            }
+        }
+        pedido.setTotal(sumaTotal);
+
+        List<DetallePedido> detallesTemporales = pedido.getDetalles();
         pedido.setDetalles(null);
 
         Pedido pedidoGuardado = pedidoRepository.save(pedido);
 
-        if (detalles != null) {
-            for (var detalle : detalles) {
-                detalle.setPedidoId(pedidoGuardado.getId());
+        if (detallesTemporales != null) {
+            for (DetallePedido det : detallesTemporales) {
+                det.setPedidoId(pedidoGuardado.getId());
             }
-            pedidoGuardado.setDetalles(detalles);
+            pedidoGuardado.setDetalles(detallesTemporales);
             pedidoGuardado = pedidoRepository.save(pedidoGuardado);
         }
 
@@ -62,7 +75,6 @@ public class PedidoService {
         pedidoRepository.save(pedido);
     }
 
-    // ¡Aquí está el método que faltaba para que el Controller no llore!
     @Transactional
     public Pedido confirmarPedidoYDescontarStock(Long id, Long productoId, Integer cantidad) {
         Pedido pedido = obtenerPorId(id);
