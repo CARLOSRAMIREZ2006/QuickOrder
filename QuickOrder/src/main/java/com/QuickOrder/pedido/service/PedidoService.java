@@ -19,8 +19,8 @@ public class PedidoService {
     private final PedidoRepository pedidoRepository;
     private final RestTemplate restTemplate;
 
-    private final String CLIENTES_API_URL = "http://localhost:8081/api/v1/clientes/";
-    private final String INVENTARIO_API_URL = "http://localhost:8082/api/v1/inventario/";
+    private final String CLIENTES_API_URL = "http://localhost:8080/api/v1/clientes/";
+    private final String INVENTARIO_API_URL = "http://localhost:8080/api/v1/inventario/";
 
     public PedidoService(PedidoRepository pedidoRepository, RestTemplate restTemplate) {
         this.pedidoRepository = pedidoRepository;
@@ -46,7 +46,8 @@ public class PedidoService {
                 throw new RuntimeException("El cliente no existe en el sistema.");
             }
         } catch (Exception e) {
-            throw new RuntimeException("Error de validación: El cliente ID " + pedido.getClienteId() + " no existe.");
+            log.error("Fallo de conexión o cliente inexistente. Causa real: {}", e.getMessage());
+            throw new RuntimeException("Error de validación: El cliente ID " + pedido.getClienteId() + " no existe o el API de clientes no responde.");
         }
         return pedidoRepository.save(pedido);
     }
@@ -72,6 +73,7 @@ public class PedidoService {
             String url = INVENTARIO_API_URL + productoId + "/descontar?cantidad=" + cantidad;
             restTemplate.put(url, null);
         } catch (Exception e) {
+            log.error("Error al contactar API Inventario. Causa real: {}", e.getMessage());
             throw new RuntimeException("Error al descontar stock para el producto ID: " + productoId);
         }
         pedido.setEstado("CONFIRMADO");
