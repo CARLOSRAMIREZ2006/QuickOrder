@@ -23,6 +23,11 @@ public class NotificacionService {
         return notificacionRepository.findAll();
     }
 
+    @Transactional(readOnly = true)
+    public List<Notificacion> obtenerPorPedidoId(Long pedidoId) {
+        return notificacionRepository.findByPedidoId(pedidoId);
+    }
+
     @Transactional
     public Notificacion enviarNotificacion(Notificacion notificacion) {
         log.info("Enviando notificacion para el pedido: {}", notificacion.getPedidoId());
