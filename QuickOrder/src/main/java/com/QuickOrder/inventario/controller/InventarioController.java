@@ -28,4 +28,10 @@ public class InventarioController {
         Inventario nuevo = inventarioService.guardar(inventario);
         return new ResponseEntity<>(nuevo, HttpStatus.CREATED);
     }
+
+    @PutMapping("/descontar")
+    public ResponseEntity<Void> descontarStock(@RequestParam Long productoId, @RequestParam Integer cantidad) {
+        inventarioService.descontarStock(productoId, cantidad);
+        return ResponseEntity.ok().build();
+    }
 }

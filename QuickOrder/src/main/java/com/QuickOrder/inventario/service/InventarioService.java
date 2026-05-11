@@ -24,4 +24,17 @@ public class InventarioService {
     public Inventario guardar(Inventario inventario) {
         return inventarioRepository.save(inventario);
     }
+
+    @Transactional
+    public void descontarStock(Long productoId, Integer cantidad) {
+        Inventario inventario = inventarioRepository.findByProductoId(productoId)
+                .orElseThrow(() -> new RuntimeException("Inventario no encontrado para el producto"));
+
+        if (inventario.getCantidadDisponible() < cantidad) {
+            throw new RuntimeException("Stock insuficiente");
+        }
+
+        inventario.setCantidadDisponible(inventario.getCantidadDisponible() - cantidad);
+        inventarioRepository.save(inventario);
+    }
 }
