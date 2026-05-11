@@ -7,9 +7,9 @@ import com.QuickOrder.producto.model.Producto;
 import com.QuickOrder.producto.repository.ProductoRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 import java.time.LocalDateTime;
 import java.math.BigDecimal;
 import java.util.List;
@@ -20,10 +20,12 @@ public class PedidoService {
     private static final Logger log = LoggerFactory.getLogger(PedidoService.class);
     private final PedidoRepository pedidoRepository;
     private final ProductoRepository productoRepository;
+    private final RestTemplate restTemplate;
 
-    public PedidoService(PedidoRepository pedidoRepository, ProductoRepository productoRepository) {
+    public PedidoService(PedidoRepository pedidoRepository, ProductoRepository productoRepository, RestTemplate restTemplate) {
         this.pedidoRepository = pedidoRepository;
         this.productoRepository = productoRepository;
+        this.restTemplate = restTemplate;
     }
 
     @Transactional(readOnly = true)
@@ -39,8 +41,15 @@ public class PedidoService {
 
     @Transactional
     public Pedido crearPedido(Pedido pedido) {
-        pedido.setFechaCreacion(LocalDateTime.now());
+        // Regla: No se puede crear un pedido si el cliente no existe
+        String urlCliente = "http://localhost:8080/api/v1/clientes/" + pedido.getClienteId();
+        try {
+            restTemplate.getForObject(urlCliente, Object.class);
+        } catch (Exception e) {
+            throw new RuntimeException("Error: El cliente con ID " + pedido.getClienteId() + " no existe.");
+        }
 
+        pedido.setFechaCreacion(LocalDateTime.now());
         if (pedido.getEstado() == null) {
             pedido.setEstado("PENDIENTE");
         }
@@ -57,7 +66,6 @@ public class PedidoService {
 
                 detalle.setPrecioUnitario(precioUnitario);
                 detalle.setSubtotal(subtotal);
-
                 totalAcumulado = totalAcumulado.add(subtotal);
             }
         }
@@ -76,8 +84,17 @@ public class PedidoService {
     @Transactional
     public Pedido confirmarPedidoYDescontarStock(Long id, Long productoId, Integer cantidad) {
         Pedido pedido = obtenerPorId(id);
+
+        // Regla: El inventario debe descontarse automáticamente al confirmar un pedido
+        String urlInventario = "http://localhost:8080/api/v1/inventarios/descontar?productoId=" + productoId + "&cantidad=" + cantidad;
+        try {
+            restTemplate.put(urlInventario, null);
+        } catch (Exception e) {
+            throw new RuntimeException("Error: No se pudo descontar el stock del producto " + productoId);
+        }
+
         pedido.setEstado("CONFIRMADO");
-        log.info("Pedido {} confirmado", id);
+        log.info("Pedido {} confirmado e inventario actualizado", id);
         return pedidoRepository.save(pedido);
     }
 
