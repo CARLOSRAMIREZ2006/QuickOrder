@@ -23,6 +23,11 @@ public class ReclamoService {
         return reclamoRepository.findAll();
     }
 
+    @Transactional(readOnly = true)
+    public List<Reclamo> obtenerPorPedido(Long pedidoId) {
+        return reclamoRepository.findByPedidoId(pedidoId);
+    }
+
     @Transactional
     public Reclamo crearReclamo(Reclamo reclamo) {
         String urlPedido = "http://localhost:8080/api/v1/pedidos/" + reclamo.getPedidoId();
