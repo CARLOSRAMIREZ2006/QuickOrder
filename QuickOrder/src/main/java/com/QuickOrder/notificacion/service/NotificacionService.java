@@ -6,7 +6,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 
 @Service
@@ -24,20 +23,13 @@ public class NotificacionService {
         return notificacionRepository.findAll();
     }
 
-    @Transactional(readOnly = true)
-    public List<Notificacion> obtenerPorPedidoId(Long pedidoId) {
-        return notificacionRepository.findByPedidoId(pedidoId);
-    }
-
     @Transactional
     public Notificacion enviarNotificacion(Notificacion notificacion) {
-        log.info("=================================================");
-        log.info("SIMULANDO ENVÍO DE CORREO ELECTRÓNICO...");
-        log.info("Para: {}", notificacion.getCorreoDestino());
-        log.info("Asunto: Actualización de su Pedido #{}", notificacion.getPedidoId());
+        log.info("Enviando notificacion para el pedido: {}", notificacion.getPedidoId());
+        log.info("Destinatario: {}", notificacion.getCorreoDestino());
         log.info("Mensaje: {}", notificacion.getMensaje());
-        log.info("=================================================");
 
+        notificacion.setEstado("ENVIADO");
         return notificacionRepository.save(notificacion);
     }
 }
