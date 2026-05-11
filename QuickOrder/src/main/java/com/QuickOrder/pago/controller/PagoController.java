@@ -24,6 +24,11 @@ public class PagoController {
         return pagoService.obtenerTodos();
     }
 
+    @GetMapping("/pedido/{pedidoId}")
+    public ResponseEntity<Pago> obtenerPorPedido(@PathVariable Long pedidoId) {
+        return ResponseEntity.ok(pagoService.obtenerPorPedidoId(pedidoId));
+    }
+
     @PostMapping
     public ResponseEntity<Pago> crearPago(@Valid @RequestBody Pago pago) {
         Pago nuevoPago = pagoService.procesarPago(pago);

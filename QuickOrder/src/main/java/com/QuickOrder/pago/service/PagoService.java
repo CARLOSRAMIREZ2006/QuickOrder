@@ -25,6 +25,12 @@ public class PagoService {
         return pagoRepository.findAll();
     }
 
+    @Transactional(readOnly = true)
+    public Pago obtenerPorPedidoId(Long pedidoId) {
+        return pagoRepository.findByPedidoId(pedidoId)
+                .orElseThrow(() -> new RuntimeException("Pago no encontrado para el pedido: " + pedidoId));
+    }
+
     @Transactional
     public Pago procesarPago(Pago pago) {
         String urlPedido = "http://localhost:8080/api/v1/pedidos/" + pago.getPedidoId();
