@@ -44,5 +44,8 @@ public class Usuario {
     @PrePersist
     public void prePersist() {
         this.fechaCreacion = LocalDateTime.now();
+        if (this.activo == null) {
+            this.activo = true;
+        }
     }
 }

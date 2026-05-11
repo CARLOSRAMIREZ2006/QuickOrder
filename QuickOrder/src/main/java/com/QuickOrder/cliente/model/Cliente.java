@@ -48,5 +48,8 @@ public class Cliente {
     @PrePersist
     public void prePersist() {
         this.fechaRegistro = LocalDateTime.now();
+        if (this.activo == null) {
+            this.activo = true;
+        }
     }
 }

@@ -34,4 +34,11 @@ public class Producto {
 
     @Column(nullable = false)
     private Boolean activo = true;
+
+    @PrePersist
+    public void prePersist() {
+        if (this.activo == null) {
+            this.activo = true;
+        }
+    }
 }
